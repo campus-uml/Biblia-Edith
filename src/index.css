@@ -1,0 +1,49 @@
+@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Open+Sans:wght@400;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "Open Sans", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Lora", serif;
+}
+
+.bible-content {
+  font-family: "Lora", serif;
+  line-height: 1.8;
+  font-size: 1.125rem;
+  color: #333;
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.verse {
+  display: block;
+  margin-bottom: 1.5rem;
+  padding-left: 2.5rem;
+  position: relative;
+}
+
+.verse-number {
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+  color: #6366f1;
+  font-size: 0.875rem;
+  top: 0.25rem;
+}
+
+.verse-text {
+  color: #1f2937;
+}
+

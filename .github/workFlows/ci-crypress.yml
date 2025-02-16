@@ -1,0 +1,91 @@
+name: CI/CD y Cypress E2E Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Descargar el código
+        uses: actions/checkout@v4
+
+      - name: 🔧 Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: 📦 Instalar dependencias con Yarn
+        run: yarn install --frozen-lockfile
+
+      - name: 🧪 Ejecutar tests con cobertura
+        run: yarn test --coverage
+
+      - name: 🧐 Verificar archivos de cobertura
+        run: ls -la ./coverage
+
+      - name: 📊 Subir cobertura a Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}  
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-actions
+          fail_ci_if_error: true
+          verbose: true
+
+  cypress-run:
+    runs-on: ubuntu-latest
+    needs: ci
+    strategy:
+      fail-fast: false
+      matrix:
+        containers: ["cnt-1", "cnt-2"]
+
+    steps:
+      - name: 📥 Descargar el código
+        uses: actions/checkout@v4
+
+      - name: 🔧 Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: 📦 Instalar dependencias con Yarn
+        run: yarn install --frozen-lockfile
+
+      - name: 🏗 Iniciar aplicación en segundo plano
+        run: yarn dev &
+
+      - name: 🧪 Ejecutar pruebas Cypress en paralelo
+        uses: cypress-io/github-action@v6
+        with:
+          wait-on: "http://localhost:5173"
+          record: true
+          parallel: true
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: cypress-run
+
+    steps:
+      - name: 📥 Descargar el código
+        uses: actions/checkout@v4
+
+      - name: 🚀 Deploy en Render
+        uses: johnbeynon/render-deploy-action@v0.0.8
+        with:
+          service-id: ${{ secrets.RENDER_SERVICE_ID }}
+          api-key: ${{ secrets.RENDER_API_KEY }}
+          wait-for-success: true
