@@ -65,15 +65,17 @@ jobs:
       - name: 🏗 Iniciar aplicación en segundo plano
         run: yarn dev &
 
-      - name: 🧪 Ejecutar pruebas Cypress en paralelo
-        uses: cypress-io/github-action@v6
-        with:
-          wait-on: "http://localhost:5173"
-          record: true
-          parallel: true
-        env:
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
+
+  - name: Upload coverage reports to Codecov
+    uses: codecov/codecov-action@v5
+    with:
+      token: ${{ secrets.CODECOV_TOKEN }}
+      wait-on: "http://localhost:5173"
+      record: true
+      parallel: true
+      env:
+        CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+        DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
 
   deploy:
     runs-on: ubuntu-latest

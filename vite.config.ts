@@ -5,6 +5,7 @@ export default defineConfig({
     esbuildOptions: {
       define: {
         global: "globalThis", // Solución para algunas dependencias
+        setupFiles: './src/setupTests.ts'
       },
     },
   },

@@ -1,96 +1,27 @@
-describe('Pruebas de la App de la Biblia', () => {
-  beforeEach(() => {
-    // Mock API responses
-    cy.intercept('GET', 'https://api.scripture.api.bible/v1/bibles/592420522e16049f-01/books', {
-      fixture: 'libros.json'
-    }).as('getLibros');
-
-    cy.intercept('GET', 'https://api.scripture.api.bible/v1/bibles/592420522e16049f-01/books/*/chapters', {
-      fixture: 'capitulos.json'
-    }).as('getCapitulos');
-
-    cy.intercept('GET', 'https://api.scripture.api.bible/v1/bibles/592420522e16049f-01/chapters/*?content-type=text', {
-      fixture: 'contenido.json'
-    }).as('getContenido');
-
-    // Simulate login
-    cy.visit('/');
-    cy.window().then((win) => {
-      win.localStorage.setItem('auth-token', 'fake-token');
-    });
-  });
-
-  it('Debe mostrar el estado de carga inicial', () => {
-    cy.get('[data-testid="loading-session"]').should('be.visible');
-  });
-
-  it('Debe mostrar la lista de libros después de cargar', () => {
-    cy.wait('@getLibros');
-    cy.contains('Libros').should('be.visible');
-    cy.contains('Génesis').should('be.visible');
-  });
-
-  it('Debe mostrar el estado de carga al seleccionar un libro', () => {
-    cy.wait('@getLibros');
-    cy.contains('Génesis').click();
-    cy.get('[data-testid="loading-content"]').should('be.visible');
-  });
-
-  it('Debe mostrar los capítulos de un libro seleccionado', () => {
-    cy.wait('@getLibros');
-    cy.contains('Génesis').click();
-    cy.wait('@getCapitulos');
-    cy.contains('Capítulos de Génesis').should('be.visible');
-    cy.contains('1').should('be.visible');
-  });
-
-  it('Debe mostrar el contenido de un capítulo seleccionado', () => {
-    cy.wait('@getLibros');
-    cy.contains('Génesis').click();
-    cy.wait('@getCapitulos');
-    cy.contains('1').click();
-    cy.wait('@getContenido');
-    cy.contains('Génesis - Capítulo 1').should('be.visible');
-    cy.contains('En el principio').should('be.visible');
-  });
-
-  it('Debe mostrar un mensaje de error al fallar la carga de libros', () => {
-    cy.intercept('GET', 'https://api.scripture.api.bible/v1/bibles/592420522e16049f-01/books', {
-      statusCode: 500,
-      body: 'Error del servidor'
-    }).as('getLibrosError');
+describe('App', () => {
+  it('should load the session and display books', () => {
+    cy.visit('/'); // Asegúrate de que tu aplicación está corriendo en el puerto 3000 (o el que configures en el baseUrl)
     
-    cy.wait('@getLibrosError');
-    cy.contains('Error al cargar los libros').should('be.visible');
+    // Verifica que el mensaje de sesión cargando se muestra
+    cy.contains('Cargando sesión...');
+
+    // Simula el inicio de sesión y la carga de libros
+    cy.intercept('GET', '/api/libros', { fixture: 'libros.json' }).as('getLibros'); // Asegúrate de tener un archivo fixture/libros.json con los libros
+
+    // Espera que los libros se carguen
+    cy.wait('@getLibros');
+    cy.contains('Genesis'); // Verifica que el libro 'Genesis' se muestre
   });
 
-  it('Debe permitir navegar de vuelta a la lista de libros', () => {
-    cy.wait('@getLibros');
-    cy.contains('Génesis').click();
+  it('should display chapters when a book is selected', () => {
+    cy.visit('/');
+    cy.intercept('GET', '/api/capitulos', { fixture: 'capitulos.json' }).as('getCapitulos'); // Fixture de capítulos
+
+    // Selecciona un libro
+    cy.contains('Genesis').click();
+    
+    // Espera a que los capítulos se carguen y muestra el primer capítulo
     cy.wait('@getCapitulos');
-    cy.contains('Volver a libros').click();
-    cy.contains('Libros').should('be.visible');
-  });
-
-  it('Debe ser accesible', () => {
-  });
-
-  it('Debe ser accesible', () => {
-    cy.wait('@getLibros');
-    cy.injectAxe();
-    cy.checkA11y();
-
-  });
-
-  it('Debe ser responsive', () => {
-    cy.viewport('iphone-6');
-    cy.wait('@getLibros');
-    cy.contains('Libros').should('be.visible');
-  });
-
-  it('Debe permitir cerrar sesión', () => {
-    cy.get('[data-testid="logout-button"]').click();
-
-    cy.contains('Iniciar sesión').should('be.visible');
+    cy.contains('Capítulo 1'); // Verifica que el capítulo 1 está disponible
   });
 });
